@@ -1,5 +1,5 @@
 import pandas as pd
-import re
+import os
 
 input_file = '00OUf00000L9vvwMAB.csv'
 mapping_file = 'strategy_mapping.csv'
@@ -61,7 +61,7 @@ for col in key_columns:
 
 # apply post-load corrections to strategy_mapping.csv:
 # geg: women's funds collaborative initiative grants map to OTHER (not their own strategy name)
-# sp: grants with primary strategy "special projects" map to OTHER (not SPECIAL PROJECTS)
+# sp: any row whose output strategy is SPECIAL PROJECTS maps to OTHER instead
 mapping_df.loc[
     (mapping_df['Board Book Top Level Program'].str.upper().str.strip() == 'GENDER EQUITY & GOVERNANCE') &
     (mapping_df['Board Book Section Title'].str.upper().str.strip() == "WOMEN'S FUNDS COLLABORATIVE INITIATIVE"),
@@ -70,8 +70,7 @@ mapping_df.loc[
 
 mapping_df.loc[
     (mapping_df['Board Book Top Level Program'].str.upper().str.strip() == 'SPECIAL PROJECTS') &
-    (mapping_df['Primary Strategy'].str.upper().str.strip() == 'SPECIAL PROJECTS') &
-    (mapping_df['Board Book Section Title'].fillna('').str.strip() == ''),
+    (mapping_df['Strategy'].str.upper().str.strip() == 'SPECIAL PROJECTS'),
     'Strategy'
 ] = 'OTHER'
 
@@ -208,7 +207,6 @@ df = df.rename(columns={
     'Primary Strategy_NORMALIZED': 'Primary Strategy'
 })
 
-import os
 os.makedirs('outputs', exist_ok=True)
 df.to_csv(output_file, index=False, encoding='utf-8-sig')
 print(f"\noutput saved to: {output_file}")
